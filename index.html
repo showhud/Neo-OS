@@ -1,0 +1,1961 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NeoOS</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            -webkit-tap-highlight-color: transparent;
+            user-select: none;
+        }
+        
+        body {
+            height: 100vh;
+            width: 100vw;
+            overflow: hidden;
+            background: linear-gradient(135deg, #1a2a6c, #2c3e50);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        #os-container {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            max-width: 1200px;
+            max-height: 700px;
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 
+                0 20px 50px rgba(0, 0, 0, 0.6),
+                0 0 0 1px rgba(255, 255, 255, 0.05),
+                0 0 50px rgba(60, 180, 255, 0.2) inset;
+            background: 
+                radial-gradient(circle at 20% 30%, rgba(26, 42, 108, 0.5), transparent 40%),
+                radial-gradient(circle at 80% 80%, rgba(44, 62, 80, 0.4), transparent 50%),
+                linear-gradient(to bottom right, rgba(0, 0, 0, 0.8), rgba(30, 30, 50, 0.8));
+            background-size: cover;
+            background-position: center;
+        }
+        
+        /* 任务栏 */
+        #taskbar {
+            position: absolute;
+            bottom: 0;
+            width: 100%;
+            height: 60px;
+            background: rgba(32, 32, 32, 0.9);
+            display: flex;
+            align-items: center;
+            z-index: 1000;
+            backdrop-filter: blur(5px);
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 0 20px;
+        }
+        
+        /* 应用程序图标 */
+        .app-icon {
+            width: 50px;
+            height: 50px;
+            margin: 0 15px;
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .app-icon:hover {
+            background: rgba(255, 255, 255, 0.25);
+            transform: scale(1.1);
+        }
+        
+        .app-icon i {
+            font-size: 24px;
+            color: white;
+        }
+        
+        /* 系统时间 */
+        #system-time {
+            color: white;
+            font-size: 16px;
+            margin-left: auto;
+            margin-right: 20px;
+        }
+        
+        /* 桌面区域 */
+        #desktop {
+            position: relative;
+            width: 100%;
+            height: calc(100% - 60px);
+            overflow: hidden;
+            background-size: cover;
+            background-position: center;
+        }
+        
+        /* 桌面图标 */
+        .desktop-icon {
+            position: absolute;
+            width: 80px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            cursor: pointer;
+            padding: 10px;
+            border-radius: 8px;
+            transition: all 0.2s;
+        }
+        
+        .desktop-icon:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+        
+        .desktop-icon-img {
+            width: 50px;
+            height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 10px;
+            margin-bottom: 8px;
+            color: white;
+            font-size: 24px;
+        }
+        
+        .desktop-icon-label {
+            color: white;
+            font-size: 14px;
+            text-align: center;
+            text-shadow: 0 1px 3px rgba(0, 0, 0, 0.7);
+        }
+        
+        /* 应用商店窗口 */
+        #app-store-window {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 90%;
+            height: 85%;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 15px 50px rgba(0, 0, 0, 0.4);
+            display: none;
+            flex-direction: column;
+            z-index: 100;
+        }
+        
+        .window-header {
+            background: rgba(32, 32, 32, 0.95);
+            color: white;
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .window-title {
+            font-size: 20px;
+            font-weight: 600;
+        }
+        
+        .window-controls {
+            display: flex;
+        }
+        
+        .window-control {
+            width: 35px;
+            height: 35px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            border-radius: 4px;
+            margin-left: 8px;
+            transition: all 0.2s ease;
+        }
+        
+        .window-control:hover {
+            background: rgba(255, 255, 255, 0.15);
+        }
+        
+        .window-control i {
+            font-size: 18px;
+            color: white;
+        }
+        
+        /* 应用商店内容 */
+        #app-store-content {
+            flex: 1;
+            padding: 20px;
+            overflow: auto;
+        }
+        
+        .app-store-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #eee;
+        }
+        
+        #app-search {
+            padding: 10px 15px;
+            border-radius: 20px;
+            border: 1px solid #ddd;
+            width: 300px;
+            font-size: 16px;
+        }
+        
+        .app-categories {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .category-btn {
+            padding: 8px 15px;
+            background: #f1f1f1;
+            border: 1px solid #ddd;
+            border-radius: 20px;
+            cursor: pointer;
+        }
+        
+        .category-btn.active {
+            background: #0067b8;
+            color: white;
+            border-color: #0067b8;
+        }
+        
+        /* 应用网格 */
+        #apps-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+            gap: 20px;
+        }
+        
+        .app-card {
+            background: white;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+            border: 1px solid #eee;
+        }
+        
+        .app-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+        }
+        
+        .app-icon-large {
+            height: 120px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #6a11cb, #2575fc);
+            color: white;
+            font-size: 36px;
+        }
+        
+        .app-info {
+            padding: 15px;
+        }
+        
+        .app-name {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+        
+        .app-developer {
+            font-size: 12px;
+            color: #666;
+            margin-bottom: 10px;
+        }
+        
+        .app-actions {
+            display: flex;
+            justify-content: space-between;
+        }
+        
+        .app-price {
+            font-weight: 600;
+            color: #0067b8;
+        }
+        
+        .download-btn {
+            padding: 6px 15px;
+            background: #0067b8;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        
+        .download-btn:hover {
+            background: #005aa3;
+        }
+        
+        .download-btn.installed {
+            background: #28a745;
+        }
+        
+        /* 应用详情弹窗 */
+        #app-detail-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 200;
+            display: none;
+        }
+        
+        .app-detail-content {
+            width: 800px;
+            max-height: 90vh;
+            background: white;
+            border-radius: 15px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .app-detail-header {
+            padding: 20px;
+            background: linear-gradient(135deg, #6a11cb, #2575fc);
+            color: white;
+            display: flex;
+            align-items: center;
+        }
+        
+        .app-detail-icon {
+            width: 80px;
+            height: 80px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 36px;
+            margin-right: 20px;
+        }
+        
+        .app-detail-title {
+            flex: 1;
+        }
+        
+        .app-detail-name {
+            font-size: 24px;
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+        
+        .app-detail-developer {
+            font-size: 16px;
+            opacity: 0.9;
+        }
+        
+        .app-detail-body {
+            flex: 1;
+            padding: 20px;
+            overflow: auto;
+        }
+        
+        .app-detail-section {
+            margin-bottom: 25px;
+        }
+        
+        .app-detail-section h3 {
+            margin-bottom: 10px;
+            padding-bottom: 5px;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .app-detail-screenshots {
+            display: flex;
+            gap: 15px;
+            overflow-x: auto;
+            padding: 10px 0;
+        }
+        
+        .app-screenshot {
+            width: 200px;
+            height: 350px;
+            background: #f5f5f5;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            font-size: 48px;
+            color: #ccc;
+        }
+        
+        .app-detail-footer {
+            padding: 15px 20px;
+            background: #f9f9f9;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .close-detail-btn {
+            padding: 10px 20px;
+            background: #6c757d;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        
+        .install-detail-btn {
+            padding: 10px 25px;
+            background: #0067b8;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+        }
+        
+        .install-detail-btn.installed {
+            background: #28a745;
+        }
+        
+        /* 应用窗口 */
+        .app-window {
+            position: absolute;
+            background: white;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            display: flex;
+            flex-direction: column;
+            min-width: 600px;
+            min-height: 400px;
+            top: 100px;
+            left: 200px;
+            display: none;
+            z-index: 50;
+        }
+        
+        .app-window-content {
+            flex: 1;
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            color: #333;
+        }
+        
+        #browser-window {
+            position: absolute;
+            background: white;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            display: flex;
+            flex-direction: column;
+            min-width: 800px;
+            min-height: 500px;
+            top: 100px;
+            left: 200px;
+            display: none;
+            z-index: 50;
+        }
+        
+        #browser-content {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+        }
+        
+        #url-bar {
+            display: flex;
+            margin-bottom: 15px;
+        }
+        
+        #url-input {
+            flex: 1;
+            padding: 12px 15px;
+            border-radius: 4px 0 0 4px;
+            border: 1px solid #ccc;
+            outline: none;
+            font-size: 16px;
+        }
+        
+        #go-button {
+            padding: 0 20px;
+            background: #0067b8;
+            color: white;
+            border: none;
+            cursor: pointer;
+            border-radius: 0 4px 4px 0;
+            transition: background 0.2s;
+            font-size: 16px;
+        }
+        
+        #go-button:hover {
+            background: #005aa3;
+        }
+        
+        #browser-iframe {
+            flex: 1;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            background: white;
+        }
+    
+        #paint-window {
+            position: absolute;
+            background: white;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            display: flex;
+            flex-direction: column;
+            min-width: 600px;
+            min-height: 500px;
+            top: 100px;
+            left: 200px;
+            display: none;
+            z-index: 50;
+        }
+        
+        #paint-container {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+        }
+        
+        #paint-controls {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .paint-btn {
+            padding: 10px 15px;
+            background: #f1f1f1;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        
+        .paint-btn:hover {
+            background: #e5e5e5;
+        }
+        
+        #canvas-container {
+            flex: 1;
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            overflow: auto;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        #paint-canvas {
+            background: white;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        
+        /* 设置窗口 */
+        #settings-window {
+            position: absolute;
+            background: white;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            display: flex;
+            flex-direction: column;
+            min-width: 600px;
+            min-height: 500px;
+            top: 100px;
+            left: 200px;
+            display: none;
+            z-index: 50;
+        }
+        
+        #settings-container {
+            display: flex;
+            height: 100%;
+        }
+        
+        #settings-sidebar {
+            width: 200px;
+            background: #f5f5f5;
+            border-right: 1px solid #ddd;
+            padding: 20px 0;
+        }
+        
+        .settings-category {
+            padding: 12px 20px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        
+        .settings-category:hover {
+            background: #e9e9e9;
+        }
+        
+        .settings-category.active {
+            background: #e0e0e0;
+            font-weight: 600;
+            border-left: 3px solid #0067b8;
+        }
+        
+        #settings-content {
+            flex: 1;
+            padding: 20px;
+            overflow: auto;
+        }
+        
+        .settings-section {
+            display: none;
+        }
+        
+        .settings-section.active {
+            display: block;
+        }
+        
+        .settings-title {
+            font-size: 24px;
+            margin-bottom: 20px;
+            color: #333;
+        }
+        
+        .wallpaper-preview {
+            width: 100%;
+            height: 200px;
+            background-size: cover;
+            background-position: center;
+            margin-bottom: 20px;
+            border-radius: 8px;
+            border: 1px solid #ddd;
+        }
+        
+        .wallpaper-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+        }
+        
+        .wallpaper-thumbnail {
+            width: 100%;
+            height: 120px;
+            background-size: cover;
+            background-position: center;
+            border-radius: 5px;
+            cursor: pointer;
+            border: 2px solid transparent;
+            transition: all 0.2s;
+        }
+        
+        .wallpaper-thumbnail:hover {
+            transform: scale(1.03);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+        
+        .wallpaper-thumbnail.selected {
+            border-color: #0067b8;
+        }
+        
+        .settings-btn {
+            padding: 10px 20px;
+            background: #0067b8;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-top: 20px;
+            font-size: 16px;
+        }
+        
+        .settings-btn:hover {
+            background: #005aa3;
+        }
+        /* 记事本窗口 */
+	#notepad-window {
+    		min-width: 700px;
+    		min-height: 500px;
+	}
+ 
+	#notepad-container {
+    		display: flex;
+    		flex-direction: column;
+    		height: 100%;
+	}
+ 
+	#notepad-toolbar {
+    		padding: 10px;
+    		background: #f5f5f5;
+    		border-bottom: 1px solid #ddd;
+    		display: flex;
+    		gap: 5px;
+    		flex-wrap: wrap;
+	}
+ 
+	.notepad-btn {
+    		width: 30px;
+    		height: 30px;
+    		background: white;
+    		border: 1px solid #ddd;
+    		border-radius: 4px;
+    		cursor: pointer;
+    		font-size: 14px;
+	}
+ 
+	.notepad-btn:hover {
+    		background: #e9e9e9;
+	}
+ 
+	.separator {
+    		width: 1px;
+    		height: 30px;
+    		background: #ddd;
+    		margin: 0 5px;
+	}
+ 
+	#notepad-font, 
+	#notepad-size{
+    		height: 30px;
+    		padding: 0 5px;
+   	 	border: 1px solid #ddd;
+    		border-radius: 4px;
+    		margin-right: 5px;
+	}
+ 
+	#notepad-color {
+    		width: 30px;
+    		height: 30px;
+    		border: 1px solid #ddd;
+    		border-radius: 4px;
+    		padding: 0;
+	}
+ 
+	#notepad-content {
+    		flex: 1;
+    		padding: 15px;
+    		overflow: auto;
+    		font-size: 16px;
+    		line-height: 1.5;
+    		outline: none;
+	}
+        
+        /* 关机界面 */
+        #shutdown-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            z-index: 2000;
+            display: none;
+        }
+        
+        .shutdown-message {
+            color: white;
+            font-size: 36px;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+        
+        #power-off-btn {
+            background: #0067b8;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 20px;
+            margin-top: 20px;
+        }
+        
+        /* 声音指示器 */
+        #sound-indicator {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 300;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s;
+        }
+        
+        #sound-indicator i {
+            font-size: 36px;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <div id="os-container">
+        <div id="desktop">
+            <!-- 桌面图标会在这里动态生成 -->
+        </div>
+        
+        <!-- 任务栏 -->
+        <div id="taskbar">
+            <div class="app-icon" id="app-store-btn">
+                <i class="fas fa-store"></i>
+            </div>
+            <div id="system-time">14:28</div>
+        </div>
+        
+        <!-- 应用商店窗口 -->
+        <div id="app-store-window" class="window">
+            <div class="window-header">
+                <div class="window-title">应用商店</div>
+                <div class="window-controls">
+                    <div class="window-control" id="minimize-store">
+                        <i class="fas fa-minus"></i>
+                    </div>
+                    <div class="window-control" id="maximize-store">
+                        <i class="fas fa-square"></i>
+                    </div>
+                    <div class="window-control" id="close-store">
+                        <i class="fas fa-times"></i>
+                    </div>
+                </div>
+            </div>
+            <div id="app-store-content">
+                <div class="app-store-header">
+                    <h2>应用商店</h2>
+                    <input type="text" id="app-search" placeholder="搜索应用...">
+                </div>
+                
+                <div class="app-categories">
+                    <div class="category-btn active">全部</div>
+                    <div class="category-btn">工具</div>
+                    <div class="category-btn">游戏</div>
+                    <div class="category-btn">社交</div>
+                    <div class="category-btn">教育</div>
+                    <div class="category-btn">娱乐</div>
+                </div>
+                
+                <div id="apps-grid">
+                    <!-- 应用卡片会在这里静态定义 -->
+                </div>
+            </div>
+        </div>
+        
+        <!-- 应用详情弹窗 -->
+        <div id="app-detail-modal">
+            <div class="app-detail-content">
+                <div class="app-detail-header">
+                    <div class="app-detail-icon">
+                        <i class="fas fa-cube"></i>
+                    </div>
+                    <div class="app-detail-title">
+                        <div class="app-detail-name">应用名称</div>
+                        <div class="app-detail-developer">开发者名称</div>
+                    </div>
+                </div>
+                
+                <div class="app-detail-body">
+                    <div class="app-detail-section">
+                        <h3>应用描述</h3>
+                        <p id="app-description">这里是应用的详细描述内容...</p>
+                    </div>
+                    
+                    <div class="app-detail-section">
+                        <h3>功能特点</h3>
+                        <ul id="app-features">
+                            <li>功能特点 1</li>
+                            <li>功能特点 2</li>
+                            <li>功能特点 3</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="app-detail-section">
+                        <h3>截图预览</h3>
+                        <div class="app-detail-screenshots">
+                            <div class="app-screenshot"><i class="fas fa-image"></i></div>
+                            <div class="app-screenshot"><i class="fas fa-image"></i></div>
+                            <div class="app-screenshot"><i class="fas fa-image"></i></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="app-detail-footer">
+                    <button class="close-detail-btn">关闭</button>
+                    <button class="install-detail-btn">安装</button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 浏览器窗口 -->
+        <div id="browser-window" class="app-window">
+            <div class="window-header">
+                <div class="window-title">浏览器</div>
+                <div class="window-controls">
+                    <div class="window-control" id="browser-minimize"><i class="fas fa-minus"></i></div>
+                    <div class="window-control" id="browser-maximize"><i class="fas fa-square"></i></div>
+                    <div class="window-control" id="browser-close"><i class="fas fa-times"></i></div>
+                </div>
+            </div>
+            <div id="browser-content">
+                <div id="url-bar">
+                    <input type="text" id="url-input" placeholder="输入网址或搜索内容">
+                    <button id="go-button">前往</button>
+                </div>
+                <iframe id="browser-iframe" src="about:blank"></iframe>
+            </div>
+        </div>
+        
+        <!-- 画图窗口 -->
+        <div id="paint-window" class="app-window">
+            <div class="window-header">
+                <div class="window-title">画图应用</div>
+                <div class="window-controls">
+                    <div class="window-control" id="paint-minimize"><i class="fas fa-minus"></i></div>
+                    <div class="window-control" id="paint-maximize"><i class="fas fa-square"></i></div>
+                    <div class="window-control" id="paint-close"><i class="fas fa-times"></i></div>
+                </div>
+            </div>
+            <div id="paint-container">
+                <div id="paint-controls">
+                    <button class="paint-btn" id="pen-tool"><i class="fas fa-pen"></i> 画笔</button>
+                    <button class="paint-btn" id="eraser-tool"><i class="fas fa-eraser"></i> 橡皮</button>
+                    <button class="paint-btn" id="clear-canvas"><i class="fas fa-trash"></i> 清空</button>
+                    <input type="color" id="color-picker" value="#000000">
+                </div>
+                <div id="canvas-container">
+                    <canvas id="paint-canvas" width="550" height="350"></canvas>
+                </div>
+            </div>
+        </div>
+        <!-- 记事本窗口 -->
+	<div id="notepad-window" class="app-window">
+    		<div class="window-header">
+        		<div class="window-title">记事本</div>
+        			<div class="window-controls">
+            			<div class="window-control" id="notepad-minimize"><i class="fas fa-minus"></i></div>
+            			<div class="window-control" id="notepad-maximize"><i class="fas fa-square"></i></div>
+           			<div class="window-control" id="notepad-close"><i class="fas fa-times"></i></div>
+        			</div>
+    			</div>
+    			<div id="notepad-container">
+        			<div id="notepad-toolbar">
+            			<button class="notepad-btn" id="notepad-new"><i class="fas fa-file"></i></button>
+            			<button class="notepad-btn" id="notepad-open"><i class="fas fa-folder-open"></i></button>
+            			<button class="notepad-btn" id="notepad-save"><i class="fas fa-save"></i></button>
+            			<div class="separator"></div>
+            			<button class="notepad-btn" id="notepad-bold"><i class="fas fa-bold"></i></button>
+            			<button class="notepad-btn" id="notepad-italic"><i class="fas fa-italic"></i></button>
+            			<button class="notepad-btn" id="notepad-underline"><i class="fas fa-underline"></i></button>
+            			<div class="separator"></div>
+            			<select id="notepad-font">
+               				<option value="Arial">Arial</option>
+                				<option value="Courier New">Courier New</option>
+                				<option value="Georgia">Georgia</option>
+                				<option value="Times New Roman">Times New Roman</option>
+                				<option value="Verdana">Verdana</option>
+                				<option value="微软雅黑">微软雅黑</option>
+                				<option value="宋体">宋体</option>
+            			</select>
+            			<select id="notepad-size">
+                				<option value="1">8px</option>
+                				<option value="2">10px</option>
+                				<option value="3">12px</option>
+                				<option value="4">14px</option>
+                				<option value="5">16px</option>
+                				<option value="6">18px</option>
+                				<option value="7">24px</option>
+            			</select>
+            			<input type="color" id="notepad-color" value="#000000">
+        		</div>
+        		<div id="notepad-content" contenteditable="true"></div>
+    		</div>
+	</div>
+        <!-- 设置窗口 -->
+        <div id="settings-window" class="app-window">
+            <div class="window-header">
+                <div class="window-title">设置</div>
+                <div class="window-controls">
+                    <div class="window-control" id="settings-minimize"><i class="fas fa-minus"></i></div>
+                    <div class="window-control" id="settings-maximize"><i class="fas fa-square"></i></div>
+                    <div class="window-control" id="settings-close"><i class="fas fa-times"></i></div>
+                </div>
+            </div>
+            <div id="settings-container">
+                <div id="settings-sidebar">
+                    <div class="settings-category active" data-section="wallpaper">壁纸设置</div>
+                    <div class="settings-category" data-section="password">检查版本</div>
+                    <div class="settings-category" data-section="network">网络设置</div>
+                </div>
+                <div id="settings-content">
+                    <div class="settings-section active" id="wallpaper-section">
+                        <h2 class="settings-title">壁纸设置</h2>
+                        <div class="wallpaper-preview" id="current-wallpaper"></div>
+                        <h3>选择壁纸</h3>
+                        <div class="wallpaper-grid" id="wallpaper-grid">
+                            <div class="wallpaper-thumbnail" data-wallpaper="https://img.shetu66.com/2023/11/28/1701173890532982.jpg"></div>
+                            <div class="wallpaper-thumbnail" data-wallpaper="https://pic1.zhimg.com/v2-3b4fc7e3a1195a081d0259246c38debc_1440w.jpg"></div>
+                            <div class="wallpaper-thumbnail" data-wallpaper="https://youke1.picui.cn/s1/2025/08/16/68a06d15b2c22.jpeg"></div>
+                                                        
+                                                   
+                        </div>
+                        <button class="settings-btn" id="apply-wallpaper">应用壁纸</button>
+
+                    </div>
+                
+                    <div class="settings-section" id="password-section">
+                        <h2 class="settings-title">检查版本</h2>
+                        <p>当前版本为Neo OS 0.3 ES ，您的版本已是最新版本</p>
+                        <p>更新日志</p>
+                        <p>更新日期:2025/8/16   更新内容：更新记事本，设置和默认壁纸更改</p>
+                        <p>更新日期:2025/8/15   更新内容：添加设置功能</p>
+                        <p>2025/8/14  系统制作完成</p>
+                    </div>
+                    
+                    <div class="settings-section" id="network-section">
+                        <h2 class="settings-title">网络设置</h2>
+                        <p>网络设置功能正在开发中...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 关机界面 -->
+        <div id="shutdown-screen">
+            <div class="shutdown-message">系统关机中...</div>
+            <div class="shutdown-message" style="font-size:48px;">
+                <i class="fas fa-power-off"></i>
+            </div>
+            <button id="power-off-btn">重新启动</button>
+        </div>
+        
+        <!-- 声音指示器 -->
+        <div id="sound-indicator">
+            <i class="fas fa-volume-up"></i>
+        </div>
+    </div>
+    <button id="fs-button">切换全屏</button>
+    <script>
+        const apps = [
+            {
+                id: 1,
+                name: "计算器",
+                developer: "数学工具公司",
+                description: "功能强大的科学计算器，支持各种数学运算",
+                category: "工具",
+                icon: "fa-calculator",
+                price: "免费",
+                installed: false,
+                features: ["基本运算", "科学计算", "单位转换", "历史记录"]
+            },
+            {
+                id: 2,
+                name: "天气应用",
+                developer: "气象服务公司",
+                description: "实时天气预报应用，提供精准的天气信息",
+                category: "工具",
+                icon: "fa-cloud-sun",
+                price: "免费",
+                installed: false,
+                features: ["实时天气", "7天预报", "降雨预测", "气象预警"]
+            },
+            {
+                id: 3,
+                name: "音乐播放器",
+                developer: "音乐科技公司",
+                description: "高品质音乐播放器，支持多种音频格式",
+                category: "娱乐",
+                icon: "fa-music",
+                price: "免费",
+                installed: false,
+                features: ["无损音质", "播放列表", "均衡器调节", "歌词显示"]
+            },
+            {
+                id: 4,
+                name: "地图导航",
+                developer: "地理信息服务",
+                description: "精准的导航应用，提供最佳路线规划",
+                category: "工具",
+                icon: "fa-map-marked-alt",
+                price: "免费",
+                installed: false,
+                features: ["实时导航", "交通信息", "离线地图", "地点搜索"]
+            },
+            {
+                id: 5,
+                name: "照片编辑器",
+                developer: "图像处理公司",
+                description: "专业级的照片编辑工具，提供多种滤镜和效果",
+                category: "工具",
+                icon: "fa-image",
+                price: "免费",
+                installed: false,
+                features: ["滤镜效果", "裁剪旋转", "亮度调节", "人像美化"]
+            },
+            {
+                id: 6,
+                name: "健康追踪",
+                developer: "健康科技公司",
+                description: "全面的健康数据追踪应用，帮助您保持健康",
+                category: "健康",
+                icon: "fa-heartbeat",
+                price: "免费",
+                installed: false,
+                features: ["步数统计", "心率监测", "睡眠分析", "卡路里计算"]
+            },
+            {
+                id: 7,
+                name: "语言学习",
+                developer: "教育科技公司",
+                description: "高效的语言学习应用，支持多国语言",
+                category: "教育",
+                icon: "fa-language",
+                price: "免费",
+                installed: false,
+                features: ["多语言支持", "发音练习", "词汇测试", "情景对话"]
+            },
+            {
+                id: 8,
+                name: "财务管理",
+                developer: "金融科技公司",
+                description: "个人财务管理工具，帮助您控制支出",
+                category: "财务",
+                icon: "fa-chart-line",
+                price: "免费",
+                installed: false,
+                features: ["账单管理", "预算规划", "投资追踪", "报表生成"]
+            },
+            {
+                id: 9,
+                name: "健身教练",
+                developer: "健身科技公司",
+                description: "个性化的健身计划，提供专业指导",
+                category: "健康",
+                icon: "fa-dumbbell",
+                price: "¥24.99",
+                installed: false,
+                features: ["训练计划", "视频指导", "进度追踪", "营养建议"]
+            },
+            {
+                id: 10,
+                name: "电子书阅读器",
+                developer: "阅读科技公司",
+                description: "舒适的阅读体验，支持多种电子书格式",
+                category: "教育",
+                icon: "fa-book-open",
+                price: "免费",
+                installed: false,
+                features: ["多种格式支持", "夜间模式", "书签功能", "字体调整"]
+            },
+            {
+                id: 11,
+                name: "视频编辑器",
+                developer: "视频科技公司",
+                description: "专业的视频编辑工具，轻松制作精彩视频",
+                category: "工具",
+                icon: "fa-video",
+                price: "免费",
+                installed: false,
+                features: ["时间线编辑", "特效添加", "音频调整", "导出分享"]
+            },
+            {
+                id: 12,
+                name: "密码管理器",
+                developer: "系统开发者",
+                description: "储存您在这套系统上的密码",
+                category: "工具",
+                icon: "fa-lock",
+                price: "免费",
+                installed: false,
+                features: ["密码生成", "自动填充", "加密存储", "多设备同步"]
+            },
+            {
+                id: 13,
+                name: "日历计划",
+                developer: "时间管理公司",
+                description: "高效的日程管理工具，帮助您规划时间",
+                category: "效率",
+                icon: "fa-calendar-alt",
+                price: "免费",
+                installed: false,
+                features: ["日程安排", "提醒功能", "重复事件", "日历共享"]
+            },
+            {
+                id: 14,
+                name: "食谱大全",
+                developer: "美食科技公司",
+                description: "海量食谱集合，提供详细烹饪指导",
+                category: "生活",
+                icon: "fa-utensils",
+                price: "免费",
+                installed: false,
+                features: ["分类浏览", "食材搜索", "视频教程", "购物清单"]
+            },
+            {
+                id: 15,
+                name: "笔记应用",
+                developer: "效率科技公司",
+                description: "强大的笔记工具，支持多种内容格式",
+                category: "效率",
+                icon: "fa-sticky-note",
+                price: "¥9.99",
+                installed: false,
+                features: ["富文本编辑", "附件添加", "标签分类", "云同步"]
+            },
+            {
+                id: 16,
+                name: "任务管理",
+                developer: "效率科技公司",
+                description: "高效的任务管理工具，提升工作效率",
+                category: "效率",
+                icon: "fa-tasks",
+                price: "免费",
+                installed: false,
+                features: ["任务创建", "优先级设置", "进度追踪", "团队协作"]
+            },
+            {
+                id: 17,
+                name: "冥想指导",
+                developer: "健康科技公司",
+                description: "专业的冥想指导应用，帮助您放松身心",
+                category: "健康",
+                icon: "fa-spa",
+                price: "¥7.99",
+                installed: false,
+                features: ["引导冥想", "呼吸练习", "背景音乐", "进度追踪"]
+            },
+            {
+                id: 18,
+                name: "天文观测",
+                developer: "天文科技公司",
+                description: "实时星空观测工具，识别星座和行星",
+                category: "教育",
+                icon: "fa-star",
+                price: "免费",
+                installed: false,
+                features: ["星座识别", "行星位置", "天文事件", "AR模式"]
+            },
+            {
+                id: 19,
+                name: "植物识别",
+                developer: "自然科技公司",
+                description: "通过拍照识别植物种类和特性",
+                category: "教育",
+                icon: "fa-leaf",
+                price: "免费",
+                installed: false,
+                features: ["拍照识别", "植物百科", "养护指南", "收藏功能"]
+            },
+            {
+                id: 20,
+                name: "烹饪计时器",
+                developer: "厨房科技公司",
+                description: "专业的厨房计时工具，支持多计时器",
+                category: "生活",
+                icon: "fa-hourglass-half",
+                price: "免费",
+                installed: false,
+                features: ["多计时器", "语音提醒", "预设时间", "进度显示"]
+            },
+            {
+                id: 21,
+                name: "设置",
+                developer: "系统开发人员",
+                description: "自定义您的系统壁纸，密码等",
+                category: "工具",
+                icon: "fa-cog",
+                price: "系统自带",
+                installed: true,
+                features: ["自定义您的系统","管理您的密码","管理您的账户","管理您的连接"]
+            },
+            {
+                id: 200,
+                name: "系统导航",
+                developer: "系统开发人员",
+                description: "支持无线导航，系好安全带，我们出发！",
+                category: "工具",
+                icon: "fa-leaf", //这里先用着植物识别的图标
+                price: "免费",
+                installed: false,
+                features: ["无线导航","实时路况","北斗定位","避开拥堵"]
+            },
+            {
+                id: 201,
+                name: "浏览器",
+                developer: "系统开发者",
+                description: "浏览网页的强大工具",
+                category: "工具",
+                icon: "fa-globe",
+                price: "免费",
+                installed: false,
+                features: ["支持网址直接访问", "支持百度搜索", "支持书签功能", "隐私浏览模式"]
+            },
+            {
+                id: 202,
+                name: "画图应用",
+                developer: "系统开发者",
+                description: "功能强大的画图工具，支持多种画笔和颜色选择",
+                category: "工具",
+                icon: "fa-paint-brush",
+                price: "免费",
+                installed: false,
+                features: ["多种画笔类型", "自定义颜色选择", "橡皮擦功能", "画布缩放"]
+            },
+            {
+                id: 203,
+                name: "关机功能",
+                developer: "系统开发者",
+                description: "系统关机功能，支持安全关闭系统",
+                category: "系统",
+                icon: "fa-power-off",
+                price: "免费",
+                installed: false,
+                features: ["安全关机", "重新启动", "睡眠模式", "系统信息查看"]
+            },
+            {
+    			id: 22,
+    			name: "记事本",
+    			developer: "系统开发者",
+    			description: "简单的文本编辑工具，支持基本格式和保存功能",
+    			category: "工具",
+    			icon: "fa-file-alt",
+    			price: "免费",
+    			installed: false,
+    			features: ["文本编辑","基本格式设置", "保存/打开文件","多标签编辑"]
+		}
+        ];
+    	   document.getElementById('fs-button').addEventListener('click',  function() {
+      		if (!document.fullscreenElement)  {
+        		document.getElementById('fullscreen-content').requestFullscreen() 
+          			.catch(err => alert(`全屏错误: ${err.message}`)); 
+      		} else {
+        			document.exitFullscreen(); 
+      		}
+    	   });
+    	   document.addEventListener('keydown',  (e) => {
+      		if (e.key  === 'Escape' && document.fullscreenElement)  {
+        			document.exitFullscreen(); 
+      		}
+    		});
+        // 初始化系统
+        document.addEventListener('DOMContentLoaded', () => {
+            // 初始化音频
+            const audio = new Audio();
+            audio.src = '1.mp3';
+            
+            // 系统时间显示
+            function updateTime() {
+                const now = new Date();
+                const hours = now.getHours().toString().padStart(2, '0');
+                const minutes = now.getMinutes().toString().padStart(2, '0');
+                document.getElementById('system-time').textContent = `${hours}:${minutes}`;
+            }
+            setInterval(updateTime, 1000);
+            updateTime(); 
+		document.getElementById('notepad-close').addEventListener('click',  function() {
+    			document.getElementById('notepad-window').style.display  = 'none';
+    			audio.play(); 
+		});
+ 
+		
+		document.addEventListener('DOMContentLoaded',  () => {
+    			const notepadContent = document.getElementById('notepad-content'); 
+    
+    		
+    			document.getElementById('notepad-new').addEventListener('click',  function() {
+        			if (!notepadContent.textContent.trim()  || confirm('确定要新建文档吗？当前内容将丢失。')) {
+            			notepadContent.innerHTML  = '';
+            			audio.play(); 
+        			}
+    			});
+    
+    			document.getElementById('notepad-save').addEventListener('click',  function() {
+        			const content = notepadContent.innerHTML; 
+        			const blob = new Blob([content], {type: 'text/html'});
+        			const url = URL.createObjectURL(blob); 
+        
+        			const a = document.createElement('a'); 
+        			a.href  = url;
+        			a.download  = '保存.html';
+        			a.click(); 
+        
+        			URL.revokeObjectURL(url); 
+        			audio.play(); 
+    			});
+    
+    			document.getElementById('notepad-open').addEventListener('click',  function() {
+        			const input = document.createElement('input'); 
+        			input.type  = 'file';
+        			input.accept  = '.txt,.html,.htm';
+        
+        			input.onchange  = e => {
+            			const file = e.target.files[0]; 
+            			const reader = new FileReader();
+            
+            			reader.onload  = event => {
+                			notepadContent.innerHTML  = event.target.result; 
+            			};
+            
+            			reader.readAsText(file); 
+        			};
+        
+        			input.click(); 
+        			audio.play(); 
+    			});
+    			document.getElementById('notepad-bold').addEventListener('click',  function() {
+        			document.execCommand('bold',  false, null);
+        			audio.play(); 
+    			});
+    
+    			document.getElementById('notepad-italic').addEventListener('click',  function() {
+        			document.execCommand('italic',  false, null);
+        			audio.play(); 
+    			});
+    
+    			document.getElementById('notepad-underline').addEventListener('click',  function() {
+        			document.execCommand('underline',  false, null);
+        			audio.play(); 
+    			});
+    			document.getElementById('notepad-font').addEventListener('change',  function() {
+        			document.execCommand('fontName',  false, this.value); 
+        			audio.play(); 
+    			});
+    
+    			document.getElementById('notepad-size').addEventListener('change',  function() {
+        			document.execCommand('fontSize',  false, this.value); 
+        			audio.play(); 
+    			});
+    
+    			document.getElementById('notepad-color').addEventListener('input',  function() {
+        			document.execCommand('foreColor',  false, this.value); 
+        			audio.play(); 
+    			});
+		});
+            
+            // 从本地存储加载已安装应用
+            function loadInstalledApps() {
+                const installedApps = JSON.parse(localStorage.getItem('installedApps')) || [];
+                installedApps.forEach(appId => {
+                    const app = apps.find(a => a.id === appId);
+                    if (app) {
+                        app.installed = true;
+                    }
+                });
+            }
+            
+            // 保存已安装应用到本地存储
+            function saveInstalledApps() {
+                const installedApps = apps.filter(app => app.installed).map(app => app.id);
+                localStorage.setItem('installedApps', JSON.stringify(installedApps));
+            }
+            
+            // 从本地存储加载壁纸
+            function loadWallpaper() {
+                const wallpaper = localStorage.getItem('wallpaper') || 'https://youke1.picui.cn/s1/2025/08/16/68a06d15b2c22.jpeg';
+                document.getElementById('os-container').style.backgroundImage = `url('${wallpaper}')`;
+                document.getElementById('current-wallpaper').style.backgroundImage = `url('${wallpaper}')`;
+            }
+            
+            // 保存壁纸到本地存储
+            function saveWallpaper(url) {
+                localStorage.setItem('wallpaper', url);
+            }
+            
+            // 渲染桌面图标
+            function renderDesktopIcons() {
+                const desktop = document.getElementById('desktop');
+                desktop.innerHTML = '';
+                
+                const installedApps = apps.filter(app => app.installed);
+                
+                installedApps.forEach((app, index) => {
+                    const top = 50 + Math.floor(index / 5) * 100;
+                    const left = 50 + (index % 5) * 100;
+                    
+                    const icon = document.createElement('div');
+                    icon.className = 'desktop-icon';
+                    icon.style.top = `${top}px`;
+                    icon.style.left = `${left}px`;
+                    icon.dataset.appId = app.id;
+                    
+                    icon.innerHTML = `
+                        <div class="desktop-icon-img">
+                            <i class="fas ${app.icon}"></i>
+                        </div>
+                        <div class="desktop-icon-label">${app.name}</div>
+                    `;
+                    
+                    icon.addEventListener('click', () => {
+                        audio.play();
+                        openApp(app.id);
+                    });
+                    
+                    desktop.appendChild(icon);
+                });
+            }
+            
+            // 渲染应用商店
+            function renderAppStore() {
+                const appsGrid = document.getElementById('apps-grid');
+                appsGrid.innerHTML = '';
+                
+                apps.forEach(app => {
+                    const appCard = document.createElement('div');
+                    appCard.className = 'app-card';
+                    appCard.dataset.appId = app.id;
+                    
+                    appCard.innerHTML = `
+                        <div class="app-icon-large">
+                            <i class="fas ${app.icon}"></i>
+                        </div>
+                        <div class="app-info">
+                            <div class="app-name">${app.name}</div>
+                            <div class="app-developer">${app.developer}</div>
+                            <div class="app-actions">
+                                <div class="app-price">${app.price}</div>
+                                <button class="download-btn ${app.installed ? 'installed' : ''}">
+                                    ${app.installed ? '已安装' : '安装'}
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                    
+                    // 应用详情点击
+                    appCard.querySelector('.app-icon-large').addEventListener('click', () => {
+                        audio.play();
+                        showAppDetail(app.id);
+                    });
+                    
+                    // 安装按钮点击
+                    const installBtn = appCard.querySelector('.download-btn');
+                    installBtn.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        audio.play();
+                        installApp(app.id);
+                    });
+                    
+                    appsGrid.appendChild(appCard);
+                });
+            }
+            
+            // 安装应用
+            function installApp(appId) {
+                const app = apps.find(a => a.id === appId);
+                if (app) {
+                    app.installed = true;
+                    saveInstalledApps();
+                    renderAppStore();
+                    renderDesktopIcons();
+                }
+            }
+            
+            // 卸载应用
+            function uninstallApp(appId) {
+                const app = apps.find(a => a.id === appId);
+                if (app) {
+                    app.installed = false;
+                    saveInstalledApps();
+                    renderAppStore();
+                    renderDesktopIcons();
+                }
+            }
+            
+            // 显示应用详情
+            function showAppDetail(appId) {
+                const app = apps.find(a => a.id === appId);
+                if (!app) return;
+                
+                const modal = document.getElementById('app-detail-modal');
+                const content = modal.querySelector('.app-detail-content');
+                
+                // 填充应用详情
+                content.querySelector('.app-detail-icon i').className = `fas ${app.icon}`;
+                content.querySelector('.app-detail-name').textContent = app.name;
+                content.querySelector('.app-detail-developer').textContent = app.developer;
+                content.querySelector('#app-description').textContent = app.description;
+                
+                // 填充功能特点
+                const featuresList = content.querySelector('#app-features');
+                featuresList.innerHTML = '';
+                app.features.forEach(feature => {
+                    const li = document.createElement('li');
+                    li.textContent = feature;
+                    featuresList.appendChild(li);
+                });
+                
+                // 设置安装按钮状态
+                const installBtn = content.querySelector('.install-detail-btn');
+                installBtn.textContent = app.installed ? '已安装' : '安装';
+                installBtn.className = `install-detail-btn ${app.installed ? 'installed' : ''}`;
+                
+                // 安装按钮事件
+                installBtn.onclick = () => {
+                    if (app.installed) {
+                        uninstallApp(app.id);
+                        installBtn.textContent = '安装';
+                        installBtn.className = 'install-detail-btn';
+                    } else {
+                        installApp(app.id);
+                        installBtn.textContent = '已安装';
+                        installBtn.className = 'install-detail-btn installed';
+                    }
+                    audio.play();
+                };
+                
+                // 关闭按钮事件
+                content.querySelector('.close-detail-btn').onclick = () => {
+                    modal.style.display = 'none';
+                    audio.play();
+                };
+                
+                modal.style.display = 'flex';
+            }
+            
+            // 打开应用
+            function openApp(appId) {
+                const app = apps.find(a => a.id === appId);
+                if (!app) return;
+                
+                // 特殊应用处理
+                if (appId === 201) { 
+                    document.getElementById('browser-window').style.display = 'flex';
+                    return;
+                }
+                
+                if (appId === 202) { // 画图应用
+                    document.getElementById('paint-window').style.display = 'flex';
+                    return;
+                }
+                
+                if (appId === 203) { // 关机功能
+                    document.getElementById('shutdown-screen').style.display = 'flex';
+                    return;
+                }
+                
+                if (appId === 21) { 
+                    document.getElementById('settings-window').style.display = 'flex';
+                    return;
+                }
+  			if (appId === 22) {
+    				document.getElementById('notepad-window').style.display  = 'flex';
+    				return;
+			}
+
+                
+                // 创建应用窗口
+                const appWindow = document.createElement('div');
+                appWindow.className = 'app-window';
+                appWindow.id = `app-window-${appId}`;
+                appWindow.style.display = 'flex';
+                
+                // 设置应用标题
+                appWindow.innerHTML = `
+                    <div class="window-header">
+                        <div class="window-title">${app.name}</div>
+                        <div class="window-controls">
+                            <div class="window-control" id="minimize-app">
+                                <i class="fas fa-minus"></i>
+                            </div>
+                            <div class="window-control" id="maximize-app">
+                                <i class="fas fa-square"></i>
+                            </div>
+                            <div class="window-control" id="close-app">
+                                <i class="fas fa-times"></i>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="app-window-content">
+                        <div style="text-align: center;">
+                            <div style="font-size: 72px; margin-bottom: 20px;">
+                                <i class="fas ${app.icon}"></i>
+                            </div>
+                            <h2>${app.name}</h2>
+                            <p>这是一个 ${app.category} 类应用</p>
+                            <p>${app.description}</p>
+                        </div>
+                    </div>
+                `;
+                
+                // 关闭按钮事件
+                appWindow.querySelector('#close-app').addEventListener('click', () => {
+                    appWindow.style.display = 'none';
+                    audio.play();
+                });
+                
+                // 添加到桌面
+                document.getElementById('desktop').appendChild(appWindow);
+            }
+            
+            // 打开应用商店
+            document.getElementById('app-store-btn').addEventListener('click', () => {
+                document.getElementById('app-store-window').style.display = 'flex';
+                audio.play();
+            });
+            
+            // 关闭应用商店
+            document.getElementById('close-store').addEventListener('click', () => {
+                document.getElementById('app-store-window').style.display = 'none';
+                audio.play();
+            });
+            
+            // 浏览器控制
+            document.getElementById('go-button').addEventListener('click', function() {
+                audio.play();
+                navigateBrowser();
+            });
+            
+            document.getElementById('url-input').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    audio.play();
+                    navigateBrowser();
+                }
+            });
+            
+            function navigateBrowser() {
+                let url = document.getElementById('url-input').value;
+                
+                if (!url.startsWith('http://') && !url.startsWith('https://')) {
+                    // 如果不是网址格式，使用百度搜索
+                    if (!url.trim()) return;
+                    url = 'https://www.baidu.com/s?wd=' + encodeURIComponent(url);
+                }
+                
+                document.getElementById('browser-iframe').src = url;
+            }
+            
+            // 关闭窗口事件
+            document.getElementById('browser-close').addEventListener('click', function() {
+                document.getElementById('browser-window').style.display = 'none';
+                audio.play();
+            });
+            
+            document.getElementById('paint-close').addEventListener('click', function() {
+                document.getElementById('paint-window').style.display = 'none';
+                audio.play();
+            });
+            
+            document.getElementById('settings-close').addEventListener('click', function() {
+                document.getElementById('settings-window').style.display = 'none';
+                audio.play();
+            });
+            
+            // 重新启动按钮
+            document.getElementById('power-off-btn').addEventListener('click', function() {
+                audio.play();
+                document.getElementById('shutdown-screen').style.display = 'none';
+            });
+            
+            // 画图应用功能
+            const canvas = document.getElementById('paint-canvas');
+            const ctx = canvas.getContext('2d');
+            let isDrawing = false;
+            let lastX = 0;
+            let lastY = 0;
+            let tool = 'pen';
+            let currentColor = '#000000';
+            
+            // 设置初始画布状态
+            ctx.lineJoin = 'round';
+            ctx.lineCap = 'round';
+            ctx.lineWidth = 3;
+            
+            // 初始化画布为白色
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            // 画布鼠标事件
+            canvas.addEventListener('mousedown', startDrawing);
+            canvas.addEventListener('mousemove', draw);
+            canvas.addEventListener('mouseup', stopDrawing);
+            canvas.addEventListener('mouseout', stopDrawing);
+            
+            function startDrawing(e) {
+                isDrawing = true;
+                const rect = canvas.getBoundingClientRect();
+                lastX = e.clientX - rect.left;
+                lastY = e.clientY - rect.top;
+            }
+            
+            function draw(e) {
+                if (!isDrawing) return;
+                
+                const rect = canvas.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
+                
+                ctx.strokeStyle = (tool === 'eraser') ? '#ffffff' : currentColor;
+                ctx.beginPath();
+                ctx.moveTo(lastX, lastY);
+                ctx.lineTo(x, y);
+                ctx.stroke();
+                
+                [lastX, lastY] = [x, y];
+            }
+            
+            function stopDrawing() {
+                isDrawing = false;
+            }
+            
+            // 工具按钮
+            document.getElementById('pen-tool').addEventListener('click', () => {
+                audio.play();
+                tool = 'pen';
+                ctx.lineWidth = 3;
+            });
+            
+            document.getElementById('eraser-tool').addEventListener('click', () => {
+                audio.play();
+                tool = 'eraser';
+                ctx.lineWidth = 20;
+            });
+            
+            document.getElementById('clear-canvas').addEventListener('click', () => {
+                audio.play();
+                if (confirm('确定要清空画布吗？')) {
+                    ctx.fillStyle = '#ffffff';
+                    ctx.fillRect(0, 0, canvas.width, canvas.height);
+                }
+            });
+            
+            // 颜色选择器
+            document.getElementById('color-picker').addEventListener('input', function() {
+                currentColor = this.value;
+                if (tool === 'pen') {
+                    ctx.strokeStyle = currentColor;
+                }
+            });
+            
+            // 设置应用功能
+            // 设置侧边栏导航
+            document.querySelectorAll('.settings-category').forEach(category => {
+                category.addEventListener('click', function() {
+                    // 更新活动类别
+                    document.querySelectorAll('.settings-category').forEach(c => {
+                        c.classList.remove('active');
+                    });
+                    this.classList.add('active');
+                    
+                    // 显示对应内容
+                    const sectionId = this.dataset.section + '-section';
+                    document.querySelectorAll('.settings-section').forEach(section => {
+                        section.classList.remove('active');
+                    });
+                    document.getElementById(sectionId).classList.add('active');
+                    
+                    audio.play();
+                });
+            });
+            
+            // 壁纸选择
+            let selectedWallpaper = '';
+            document.querySelectorAll('.wallpaper-thumbnail').forEach(thumbnail => {
+                thumbnail.addEventListener('click', function() {
+                    document.querySelectorAll('.wallpaper-thumbnail').forEach(t => {
+                        t.classList.remove('selected');
+                    });
+                    this.classList.add('selected');
+                    selectedWallpaper = this.dataset.wallpaper;
+                    document.getElementById('current-wallpaper').style.backgroundImage = `url('${selectedWallpaper}')`;
+                    audio.play();
+                });
+            });
+            
+            // 应用壁纸
+            document.getElementById('apply-wallpaper').addEventListener('click', function() {
+                if (!selectedWallpaper) {
+                    alert('请先选择一个壁纸');
+                    return;
+                }
+                
+                document.getElementById('os-container').style.backgroundImage = `url('${selectedWallpaper}')`;
+                saveWallpaper(selectedWallpaper);
+                alert('壁纸已更换成功！');
+                audio.play();
+            });
+            
+            // 初始化应用商店搜索
+            document.getElementById('app-search').addEventListener('input', function() {
+                const searchTerm = this.value.toLowerCase();
+                const appCards = document.querySelectorAll('.app-card');
+                
+                appCards.forEach(card => {
+                    const appId = parseInt(card.dataset.appId);
+                    const app = apps.find(a => a.id === appId);
+                    if (app) {
+                        const appName = app.name.toLowerCase();
+                        const shouldShow = appName.includes(searchTerm);
+                        card.style.display = shouldShow ? 'block' : 'none';
+                    }
+                });
+            });
+            
+            // 初始化应用类别筛选
+            document.querySelectorAll('.category-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    document.querySelectorAll('.category-btn').forEach(b => {
+                        b.classList.remove('active');
+                    });
+                    this.classList.add('active');
+                    
+                    const category = this.textContent;
+                    const appCards = document.querySelectorAll('.app-card');
+                    
+                    appCards.forEach(card => {
+                        const appId = parseInt(card.dataset.appId);
+                        const app = apps.find(a => a.id === appId);
+                        if (app) {
+                            const shouldShow = category === '全部' || app.category === category;
+                            card.style.display = shouldShow ? 'block' : 'none';
+                        }
+                    });
+                    
+                    audio.play();
+                });
+            });
+            
+            // 初始化系统
+            loadInstalledApps();
+            loadWallpaper();
+            renderDesktopIcons();
+            renderAppStore();
+        });
+    </script>
+</body>
+</html>
