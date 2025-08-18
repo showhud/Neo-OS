@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NeoOS</title>
+    <title>Neo OS</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         * {
@@ -1043,9 +1043,10 @@
                         <h2 class="settings-title">检查版本</h2>
                         <p>当前版本为Neo OS 0.3 ES ，您的版本已是最新版本</p>
                         <p>更新日志</p>
-						<p>更新日期：2025/8/17  更新内容：更新设置壁纸以及一些小补丁</p>
-                        <p>更新日期:2025/8/16   更新内容：更新记事本，设置和默认壁纸更改</p>
-                        <p>更新日期:2025/8/15   更新内容：添加设置功能</p>
+						<p>更新日期:2025/8/18   更新内容：小补丁，编写了一些语言切换的框架,制作“抖音”，添加软体证书监测  完成者：3908373151</p>
+						<p>更新日期：2025/8/17  更新内容：更新设置壁纸以及一些小补丁  完成者：3908373151</p>
+                        <p>更新日期:2025/8/16   更新内容：更新记事本，设置和默认壁纸更改  完成者：3908373151</p>
+                        <p>更新日期:2025/8/15   更新内容：添加设置功能  完成者：3908373151</p>
                         <p>2025/8/14  系统制作完成</p>
                     </div>
                     
@@ -1071,13 +1072,12 @@
             <i class="fas fa-volume-up"></i>
         </div>
     </div>
-    <button id="fs-button">切换全屏</button>
     <script>
         const apps = [
             {
                 id: 1,
                 name: "计算器",
-                developer: "数学工具公司",
+                developer: "系统开发人员（已经识别证书）",
                 description: "功能强大的科学计算器，支持各种数学运算",
                 category: "工具",
                 icon: "fa-calculator",
@@ -1169,7 +1169,7 @@
                 description: "个性化的健身计划，提供专业指导",
                 category: "健康",
                 icon: "fa-dumbbell",
-                price: "¥24.99",
+                price: "免费",
                 installed: false,
                 features: ["训练计划", "视频指导", "进度追踪", "营养建议"]
             },
@@ -1235,7 +1235,7 @@
                 description: "强大的笔记工具，支持多种内容格式",
                 category: "效率",
                 icon: "fa-sticky-note",
-                price: "¥9.99",
+                price: "免费",
                 installed: false,
                 features: ["富文本编辑", "附件添加", "标签分类", "云同步"]
             },
@@ -1257,7 +1257,7 @@
                 description: "专业的冥想指导应用，帮助您放松身心",
                 category: "健康",
                 icon: "fa-spa",
-                price: "¥7.99",
+                price: "免费",
                 installed: false,
                 features: ["引导冥想", "呼吸练习", "背景音乐", "进度追踪"]
             },
@@ -1319,7 +1319,7 @@
             {
                 id: 201,
                 name: "浏览器",
-                developer: "系统开发者",
+                developer: "系统开发者（已经识别证书）",
                 description: "浏览网页的强大工具",
                 category: "工具",
                 icon: "fa-globe",
@@ -1330,7 +1330,7 @@
             {
                 id: 202,
                 name: "画图应用",
-                developer: "系统开发者",
+                developer: "系统开发者（已经识别证书）",
                 description: "功能强大的画图工具，支持多种画笔和颜色选择",
                 category: "工具",
                 icon: "fa-paint-brush",
@@ -1341,7 +1341,7 @@
             {
                 id: 203,
                 name: "关机功能",
-                developer: "系统开发者",
+                developer: "系统开发者（已经识别证书）",
                 description: "系统关机功能，支持安全关闭系统",
                 category: "系统",
                 icon: "fa-power-off",
@@ -1352,13 +1352,23 @@
             {
     			id: 22,
     			name: "记事本",
-    			developer: "系统开发者",
+    			developer: "系统开发者（已经识别证书）",
     			description: "简单的文本编辑工具，支持基本格式和保存功能",
     			category: "工具",
     			icon: "fa-file-alt",
     			price: "免费",
     			installed: false,
     			features: ["文本编辑","基本格式设置", "保存/打开文件","多标签编辑"]
+		},
+		{
+			id:23,
+			name:"抖音",
+			developer:"字节跳动有限公司（已经识别证书）",
+			description:"一个巨大的短视频社交平台，创建您的抖音账户加入社交！",
+			categpry:"娱乐",
+			installed:false,
+			price:"免费(APP内购买）",
+			features:["短视频社交","管理您的账号","剪辑您的视频","演唱会抢票"]
 		}
         ];
     	   document.getElementById('fs-button').addEventListener('click',  function() {
